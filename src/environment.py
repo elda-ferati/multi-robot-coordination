@@ -55,45 +55,51 @@ class GridEnvironment:
         print("Cannot place dynamic obstacle here.")
         return False
 
-    def move_dynamic_obstacles(self):
+    def move_dynamic_obstacles(self, blocked_positions=None):
+        if blocked_positions is None:
+            blocked_positions = set()
+
         old_positions = self.dynamic_obstacles.copy()
         new_positions = []
 
-        # Reserve all positions occupied at the start
-        occupied_positions = set(old_positions)
+        # Reserve positions occupied by robots and obstacles
+        occupied = set(old_positions)
+        occupied.update(blocked_positions)
 
         directions = [
-            (-1, 0),  # Up
-            (1, 0),   # Down
-            (0, -1),  # Left
-            (0, 1)    # Right
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1)
         ]
 
         for row, col in old_positions:
             valid_positions = []
 
             for dr, dc in directions:
-                new_row = row + dr
-                new_col = col + dc
+                nr = row + dr
+                nc = col + dc
 
-                if self.is_valid_position(new_row, new_col):
-                    if self.grid[new_row][new_col] == 0:
-                        if (new_row, new_col) not in occupied_positions:
-                            valid_positions.append((new_row, new_col))
+                if (
+                    self.is_valid_position(nr, nc)
+                    and self.grid[nr][nc] == 0
+                    and (nr, nc) not in occupied
+                ):
+                    valid_positions.append((nr, nc))
 
             if valid_positions:
-                new_row, new_col = random.choice(valid_positions)
+                new_position = random.choice(valid_positions)
             else:
-                new_row, new_col = row, col
+                new_position = (row, col)
 
-            new_positions.append((new_row, new_col))
-            occupied_positions.add((new_row, new_col))
+            new_positions.append(new_position)
+            occupied.add(new_position)
 
-        # Clear old dynamic obstacle positions
+        # Clear previous dynamic obstacle positions
         for row, col in old_positions:
             self.grid[row][col] = 0
 
-        # Place dynamic obstacles at their new positions
+        # Place dynamic obstacles at new positions
         for row, col in new_positions:
             self.grid[row][col] = 2
 

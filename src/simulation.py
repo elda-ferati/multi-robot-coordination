@@ -1,6 +1,7 @@
 
 from environment import GridEnvironment
 from robot import Robot
+from pathfinding import astar
 
 
 class Simulation:
@@ -19,10 +20,10 @@ class Simulation:
         if self.environment.grid[row][col] != 0:
             return False
 
-        if any(robot.position == position for robot in self.robots):
+        if any(r.position == position for r in self.robots):
             return False
 
-        if any(robot.robot_id == robot_id for robot in self.robots):
+        if any(r.robot_id == robot_id for r in self.robots):
             return False
 
         self.robots.append(Robot(robot_id, position))
@@ -32,8 +33,7 @@ class Simulation:
         for robot in self.robots:
             if robot.robot_id == robot_id:
                 return robot.assign_goal(
-                    self.environment,
-                    goal
+                    self.environment, goal
                 )
 
         return False
@@ -41,61 +41,74 @@ class Simulation:
     def step(self):
         self.time_step += 1
 
-        # 1. Move dynamic obstacles
-        self.environment.move_dynamic_obstacles()
+        # Current robot positions
+        occupied = {r.position for r in self.robots}
 
-        # 2. Reserve robot positions
-        occupied = {robot.position for robot in self.robots}
-        reserved = set()
-        planned_moves = []
+        # Move dynamic obstacles without entering robot cells
+        self.environment.move_dynamic_obstacles(
+            blocked_positions=occupied
+        )
 
-        # 3. Plan robot movements
-        for robot in self.robots:
+        # Rotate robot priority at every time step
+        count = len(self.robots)
+
+        if count:
+            offset = (self.time_step - 1) % count
+            ordered_robots = (
+                self.robots[offset:] + self.robots[:offset]
+            )
+        else:
+            ordered_robots = []
+
+        # Move robots sequentially
+        for robot in ordered_robots:
+            if robot.goal is None:
+                continue
+
             current = robot.position
-            next_position = current
 
-            if robot.goal is not None:
-                # Replan using updated obstacle positions
-                robot.assign_goal(
-                    self.environment,
-                    robot.goal
-                )
+            # Treat other robots as temporary obstacles
+            blocked = {
+                r.position
+                for r in self.robots
+                if r.robot_id != robot.robot_id
+            }
 
-                if robot.path:
-                    candidate = robot.path[0]
-                    row, col = candidate
+            # Find a new path with A*
+            path = astar(
+                self.environment,
+                current,
+                robot.goal,
+                blocked_positions=blocked
+            )
 
-                    if (
-                        self.environment.grid[row][col] == 0
-                        and candidate not in occupied
-                        and candidate not in reserved
-                    ):
-                        next_position = candidate
+            if path is None or len(path) < 2:
+                robot.path = []
+                continue
 
-            planned_moves.append((robot, next_position))
-            reserved.add(next_position)
+            next_position = path[1]
 
-        # 4. Apply robot movements
-        for robot, next_position in planned_moves:
-            if next_position != robot.position:
-                robot.position = next_position
+            # Move only one cell per time step
+            robot.position = next_position
+            robot.path = path[2:]
 
-                if robot.path and robot.path[0] == next_position:
-                    robot.path.pop(0)
+            # Check if destination is reached
+            if robot.position == robot.goal:
+                robot.completed_tasks += 1
+                robot.goal = None
+                robot.path = []
 
-                if robot.position == robot.goal:
-                    robot.completed_tasks += 1
-                    robot.goal = None
-                    robot.path = []
-
-        # 5. Save simulation history
+        # Record simulation history
         self.history.append({
             "step": self.time_step,
             "positions": [
-                robot.position for robot in self.robots
+                r.position for r in self.robots
             ],
             "dynamic_obstacles":
-                self.environment.dynamic_obstacles.copy()
+                self.environment.dynamic_obstacles.copy(),
+            "completed_tasks": [
+                r.completed_tasks for r in self.robots
+            ]
         })
 
     def run(self, steps=20):

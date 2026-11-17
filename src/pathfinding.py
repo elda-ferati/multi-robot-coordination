@@ -6,11 +6,16 @@ def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 
-def astar(environment, start, goal):
+def astar(environment, start, goal, blocked_positions=None):
+    blocked = set(blocked_positions or [])
+
     if not environment.is_valid_position(*start):
         return None
 
     if not environment.is_valid_position(*goal):
+        return None
+
+    if start in blocked or goal in blocked:
         return None
 
     if environment.grid[start[0]][start[1]] != 0:
@@ -19,9 +24,7 @@ def astar(environment, start, goal):
     if environment.grid[goal[0]][goal[1]] != 0:
         return None
 
-    open_set = []
-    heapq.heappush(open_set, (0, start))
-
+    open_set = [(heuristic(start, goal), start)]
     came_from = {}
     g_score = {start: 0}
 
@@ -33,7 +36,7 @@ def astar(environment, start, goal):
     ]
 
     while open_set:
-        current = heapq.heappop(open_set)[1]
+        _, current = heapq.heappop(open_set)
 
         if current == goal:
             path = [current]
@@ -58,17 +61,20 @@ def astar(environment, start, goal):
             if environment.grid[row][col] != 0:
                 continue
 
-            tentative_g = g_score[current] + 1
+            if neighbor in blocked:
+                continue
 
-            if tentative_g < g_score.get(neighbor, float("inf")):
+            new_cost = g_score[current] + 1
+
+            if new_cost < g_score.get(neighbor, float("inf")):
+                g_score[neighbor] = new_cost
                 came_from[neighbor] = current
-                g_score[neighbor] = tentative_g
 
-                f_score = tentative_g + heuristic(neighbor, goal)
+                priority = new_cost + heuristic(neighbor, goal)
 
                 heapq.heappush(
                     open_set,
-                    (f_score, neighbor)
+                    (priority, neighbor)
                 )
 
     return None
