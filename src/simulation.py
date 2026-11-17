@@ -16,6 +16,12 @@ class Simulation:
         self.time_step = 0
         self.history = []
 
+        # Performance metrics
+        self.astar_calls = 0
+        self.replanning_events = 0
+        self.total_distance = 0
+        self.collision_count = 0
+
     def add_robot(self, robot_id, position):
         row, col = position
 
@@ -31,19 +37,15 @@ class Simulation:
         if any(r.robot_id == robot_id for r in self.robots):
             return False
 
-        self.robots.append(
-            Robot(robot_id, position)
-        )
+        self.robots.append(Robot(robot_id, position))
         return True
 
     def assign_goal(self, robot_id, goal):
         for robot in self.robots:
             if robot.robot_id == robot_id:
                 return robot.assign_goal(
-                    self.environment,
-                    goal
+                    self.environment, goal
                 )
-
         return False
 
     def add_task(
@@ -54,6 +56,9 @@ class Simulation:
         priority=1
     ):
         if any(t.task_id == task_id for t in self.tasks):
+            return False
+
+        if priority < 1:
             return False
 
         for position in [pickup, delivery]:
@@ -109,6 +114,23 @@ class Simulation:
             robot.goal = None
             robot.path = []
 
+    def plan_path(self, robot, blocked):
+        self.astar_calls += 1
+
+        path = astar(
+            self.environment,
+            robot.position,
+            robot.goal,
+            blocked_positions=blocked
+        )
+
+        if path is None:
+            robot.path = []
+            return False
+
+        robot.path = path[1:]
+        return True
+
     def step(self):
         self.time_step += 1
 
@@ -117,18 +139,19 @@ class Simulation:
             for robot in self.robots
         }
 
+        # Move dynamic obstacles safely
         self.environment.move_dynamic_obstacles(
             blocked_positions=occupied
         )
 
-        # Assign available tasks
+        # Allocate pending tasks
         allocate_tasks(
             self.robots,
             self.tasks,
             self.environment
         )
 
-        # Rotate movement priority
+        # Rotate robot priority
         count = len(self.robots)
 
         if count:
@@ -152,22 +175,69 @@ class Simulation:
                 if r.robot_id != robot.robot_id
             }
 
-            path = astar(
-                self.environment,
-                robot.position,
-                robot.goal,
-                blocked_positions=blocked
-            )
+            # Check whether current path is usable
+            needs_replanning = False
 
-            if path is None or len(path) < 2:
-                robot.path = []
+            if not robot.path:
+                needs_replanning = True
+
+            else:
+                next_position = robot.path[0]
+                row, col = next_position
+
+                if (
+                    self.environment.grid[row][col] != 0
+                    or next_position in blocked
+                ):
+                    needs_replanning = True
+
+            if needs_replanning:
+                self.replanning_events += 1
+
+                if not self.plan_path(robot, blocked):
+                    continue
+
+            if not robot.path:
                 continue
 
-            robot.position = path[1]
-            robot.path = path[2:]
+            next_position = robot.path[0]
+
+            # Final safety check
+            if (
+                next_position in blocked
+                or self.environment.grid[
+                    next_position[0]
+                ][next_position[1]] != 0
+            ):
+                continue
+
+            old_position = robot.position
+            robot.position = next_position
+            robot.path.pop(0)
+
+            movement = (
+                abs(next_position[0] - old_position[0])
+                + abs(next_position[1] - old_position[1])
+            )
+
+            self.total_distance += movement
 
             self.process_robot_task(robot)
 
+        # Safety validation
+        positions = [r.position for r in self.robots]
+        dynamic_positions = self.environment.dynamic_obstacles
+
+        if (
+            len(positions) != len(set(positions))
+            or set(positions) & set(dynamic_positions)
+        ):
+            self.collision_count += 1
+            raise RuntimeError(
+                "Collision detected in simulation"
+            )
+
+        # Save history
         self.history.append({
             "step": self.time_step,
             "positions": [
@@ -185,9 +255,26 @@ class Simulation:
                     "assigned_robot": t.assigned_robot
                 }
                 for t in self.tasks
-            ]
+            ],
+            "total_distance": self.total_distance,
+            "astar_calls": self.astar_calls
         })
 
     def run(self, steps=20):
         for _ in range(steps):
             self.step()
+
+    def print_metrics(self):
+        completed = sum(
+            t.status == "completed"
+            for t in self.tasks
+        )
+
+        print("\nPERFORMANCE METRICS")
+        print("-------------------")
+        print("Simulation steps:", self.time_step)
+        print("Completed deliveries:", completed)
+        print("Total distance:", self.total_distance)
+        print("A* calls:", self.astar_calls)
+        print("Replanning events:", self.replanning_events)
+        print("Recorded collisions:", self.collision_count)
