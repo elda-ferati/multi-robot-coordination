@@ -1,0 +1,23 @@
+MULTI-ROBOT COORDINATION — GUI FINAL
+
+1) Ne VS Code ruaje gui.py aktual duke e riemertuar gui_previous.py.
+2) Kopjo gui_final.py, algorithm_comparison.py dhe final_project_check.py
+   ne folderin kryesor "Multi Robot Coordination".
+3) Riemerto gui_final.py ne gui.py. Mos e zhvendos brenda src/ ose experiments/.
+4) Sigurohu se models_v4_dynamic/marl_v4_dynamic_episode_20.pt
+   dhe results/final_marl_dynamic_benchmark.csv jane aty.
+5) Ekzekuto ne PowerShell, ne folderin kryesor te projektit:
+   .\.venv\Scripts\python.exe final_project_check.py
+6) Pastaj:
+   .\.venv\Scripts\python.exe gui.py
+
+TESTIM MANUAL I FUNKSIONEVE:
+- Seed 100, MARL Dynamic 20: Start, Pause, Step, Start, plotesimi 40/40.
+- Reset: counters kthehen ne zero, robotet ne pozicionet e fillimit.
+- Auction dhe Hungarian V3/V4 ne seed 100 pas Reset.
+- Open Algorithm Comparison: shfaq 6 algoritme dhe 4 metrika nga CSV.
+- Simulation Summary: 40/40, hapa, distance, kohe urgjente.
+- Export Results to CSV: krijohen summary.csv dhe _tasks.csv.
+
+Shenim: testi automatik mund te ekzekutohet vetem ne kompjuterin ku eshte
+instaluar projekti i plote, jo vetem nga keto tre file-a.

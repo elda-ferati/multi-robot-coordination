@@ -1,0 +1,2 @@
+﻿algorithm,seed,success,simulation_steps,completed_tasks,total_tasks,normal_completed,normal_total,normal_avg_steps,urgent_completed,urgent_total,urgent_avg_steps,total_distance,collisions,astar_calls,replanning_events,yield_events,yield_moves
+MARL Dynamic 20,100,True,215,40,40,24,24,104.208,16,16,38.562,934,0,55,55,0,0

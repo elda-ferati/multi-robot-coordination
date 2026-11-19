@@ -1,0 +1,16 @@
+algorithm,seed,grid_size,robots,tasks,completed_tasks,completion_rate,finish_step,total_distance,collisions,astar_calls_simulation,replanning_events,total_waiting_steps,runtime_seconds
+Global Auction,42,20x20,3,6,6,100.0,84,232,0,7,7,3,0.011335
+Hungarian V1,42,20x20,3,6,6,100.0,92,240,0,7,7,5,0.008827
+Hungarian V2,42,20x20,3,6,6,100.0,84,232,0,7,7,3,0.007362
+Global Auction,43,20x20,3,6,6,100.0,86,234,0,8,8,3,0.011352
+Hungarian V1,43,20x20,3,6,6,100.0,92,240,0,7,7,5,0.010341
+Hungarian V2,43,20x20,3,6,6,100.0,86,234,0,8,8,3,0.008563
+Global Auction,44,20x20,3,6,6,100.0,84,234,0,9,9,3,0.011938
+Hungarian V1,44,20x20,3,6,6,100.0,94,248,0,9,9,5,0.009809
+Hungarian V2,44,20x20,3,6,6,100.0,84,234,0,9,9,3,0.007049
+Global Auction,45,20x20,3,6,6,100.0,84,232,0,7,7,3,0.01392
+Hungarian V1,45,20x20,3,6,6,100.0,102,252,0,8,8,5,0.010051
+Hungarian V2,45,20x20,3,6,6,100.0,84,232,0,7,7,3,0.008143
+Global Auction,46,20x20,3,6,6,100.0,87,234,0,9,9,3,0.014076
+Hungarian V1,46,20x20,3,6,6,100.0,92,240,0,8,8,5,0.017434
+Hungarian V2,46,20x20,3,6,6,100.0,87,234,0,9,9,3,0.008585
