@@ -1,0 +1,5 @@
+grid,robots,algorithm,runs,successful,success_rate_pct,mean_finish,mean_distance,mean_runtime_seconds,mean_astar_calls,mean_replanning_events,mean_yield_events,mean_p1_avg,mean_p3_avg,total_collisions,error_runs
+20x20,5,MARL Dynamic 20,30,30,100.0,214.0333,915.7,0.0321,60.8667,60.8667,0.3333,109.1058,45.9091,0,0
+20x20,8,MARL Dynamic 20,30,30,100.0,151.1333,935.7667,0.033,64.2667,64.2667,1,63.4072,35.3431,0,0
+30x30,5,MARL Dynamic 20,30,30,100.0,307.3667,1332.7333,0.0489,51.4333,51.4333,0.1,161.6303,70.6726,0,0
+30x30,10,MARL Dynamic 20,30,30,100.0,181.1667,1335.7333,0.0477,57.1667,57.1667,0.3,75.6414,45.2636,0,0
